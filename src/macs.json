@@ -1,0 +1,86 @@
+{
+  "macs": [
+    {
+      "id": "2",
+      "client_mac": "aa:bc:00:ce:5c:0a",
+      "reason": "auth-failure",
+      "block_time": "28 days 56 mins 45 secs",
+      "remaining_time": "Permanent",
+      "wlc": "wlc 1"
+    },
+    {
+      "id": "4",
+      "client_mac": "90:73:5a:01:34:0d",
+      "reason": "auth-failure",
+      "block_time": "38 days 19 hrs 46 mins 50 secs",
+      "remaining_time": "Permanent",
+      "wlc": "wlc 2"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "first_name": "Alex",
+      "last_name": "Alekseenko",
+      "nickname": "nikcname",
+      "description": "The Network Group Admin ",
+      "subdivision": "BHMC",
+      "team": "Network Group",
+      "room": "Aaron 112",
+      "contactEmail": "alex@teksolutions.com",
+      "contactPhone": "555-555-5555",
+      "registration": {
+        "date": "01/21/2025",
+        "last_login_date": "01/22/2025"
+      }
+    },
+    {
+      "id": "5",
+      "first_name": "Alex",
+      "last_name": "Alekseenko",
+      "nickname": "nikcname",
+      "description": "The Network Group Admin ",
+      "subdivision": "BHMC",
+      "team": "Network Group",
+      "room": "Aaron 112",
+      "contactEmail": "alex@teksolutions.com",
+      "contactPhone": "555-555-5555",
+      "registration": {
+        "date": "01/21/2025",
+        "last_login_date": "01/22/2025"
+      }
+    },
+    {
+      "id": "8",
+      "first_name": "Alex",
+      "last_name": "Alekseenko",
+      "nickname": "nikcname",
+      "description": "The Network Group Admin ",
+      "subdivision": "BHMC",
+      "team": "Network Group",
+      "room": "Aaron 112",
+      "contactEmail": "alex@teksolutions.com",
+      "contactPhone": "555-555-5555",
+      "registration": {
+        "date": "01/21/2025",
+        "last_login_date": "01/22/2025"
+      }
+    },
+    {
+      "first_name": "Aleksandr",
+      "last_name": "Alekseenko",
+      "nickname": "alexjd2000",
+      "description": "asdfasdf",
+      "subdivision": "KJMC",
+      "team": "Support Group",
+      "room": "asdfadsfasdfasdfasfsadf",
+      "contactEmail": "user@example.com",
+      "contactPhone": "555-000-0000",
+      "registration": {
+        "date": "01/21/2025",
+        "last_login_date": ""
+      },
+      "id": "777a"
+    }
+  ]
+}
