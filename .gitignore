@@ -22,6 +22,11 @@ coverage
 .env
 .env.*
 
+# Deploy script — local config and runtime files
+.deploy.conf
+deploy.log
+blacklistremover_backup_*.sql
+
 # OS files
 .DS_Store
 Thumbs.db
