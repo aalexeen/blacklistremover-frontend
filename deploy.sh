@@ -401,6 +401,11 @@ do_setup() {
         "nginx -v 2>&1 | head -1" \
         "nginx"
 
+    check_and_install \
+        "Maven" \
+        "mvn -version 2>/dev/null | head -1" \
+        "maven"
+
     header "Creating service user"
     if id "$SERVICE_USER" >/dev/null 2>&1; then
         ok "User '${SERVICE_USER}' already exists"
@@ -580,8 +585,16 @@ do_deploy_backend() {
     backend_dir="$(resolve_backend_dir)"
     info "Using backend: ${backend_dir}"
 
-    info "Running: ./mvnw clean package -DskipTests"
-    (cd "$backend_dir" && ./mvnw clean package -DskipTests -q)
+    local mvn_cmd
+    if [[ -x "${backend_dir}/mvnw" ]]; then
+        mvn_cmd="./mvnw"
+    elif command -v mvn &>/dev/null; then
+        mvn_cmd="mvn"
+    else
+        die "Neither mvnw nor mvn found. Run './deploy.sh setup' to install Maven."
+    fi
+    info "Running: ${mvn_cmd} clean package -DskipTests"
+    (cd "$backend_dir" && $mvn_cmd clean package -DskipTests -q)
     ok "Build successful"
 
     local jar
@@ -705,8 +718,10 @@ check_dependencies() {
     local backend_dir="${BACKEND_DIR:-${DEFAULT_BACKEND_DIR}}"
     if [[ -x "${backend_dir}/mvnw" ]]; then
         ok "mvnw — found in ${backend_dir}"
+    elif command -v mvn &>/dev/null; then
+        ok "mvn — $(mvn -version 2>/dev/null | head -1) (mvnw not found, will use system mvn)"
     else
-        warn "mvnw — not found at '${backend_dir}/mvnw'"
+        warn "mvnw not found at '${backend_dir}/mvnw' and mvn not installed"
         (( fail_count++ ))
     fi
     [[ $fail_count -gt 0 ]] && warn "${fail_count} tool(s) missing — some steps may fail"
