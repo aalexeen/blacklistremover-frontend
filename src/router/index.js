@@ -7,6 +7,7 @@ import AddUserView from "@/views/AddUserView.vue";
 import AllUsersView from "@/views/AllUsersView.vue";
 import UserView from "@/views/UserView.vue";
 import EditUserView from "@/views/EditUserView.vue";
+import DeletedMacsView from "@/views/DeletedMacsView.vue";
 import Login from "@/views/Login.vue";
 import Registration from "@/views/Registration.vue";
 
@@ -104,6 +105,15 @@ const router = createRouter({
       meta: { 
         requiresAuth: true,
         roles: ['ADMIN'] // Only admins can edit users
+      },
+    },
+    {
+      path: "/history",
+      name: "deletion-history",
+      component: DeletedMacsView,
+      meta: {
+        requiresAuth: true,
+        roles: ['ADMIN']
       },
     },
     {

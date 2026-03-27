@@ -112,6 +112,15 @@ const canAccessUserManagement = () => {
                     'text-white', 'px-3', 'py-2', 'rounded-md']">
                   Add User
                 </RouterLink>
+
+                <RouterLink
+                  to="/history"
+                  :class="[isActiveLink('/history')
+                    ? 'bg-green-900'
+                    : 'hover:bg-gray-900 hover:text-white',
+                    'text-white', 'px-3', 'py-2', 'rounded-md']">
+                  Deletion History
+                </RouterLink>
               </template>
 
               <!-- My Account - Available to all authenticated users -->
