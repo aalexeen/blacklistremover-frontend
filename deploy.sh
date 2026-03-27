@@ -387,9 +387,9 @@ do_setup() {
     sudo apt-get update -qq
 
     check_and_install \
-        "Java 21" \
+        "Java 24" \
         "java -version 2>&1 | head -1" \
-        "openjdk-21-jdk"
+        "openjdk-24-jdk"
 
     check_and_install \
         "PostgreSQL" \
@@ -405,6 +405,11 @@ do_setup() {
         "Maven" \
         "mvn -version 2>/dev/null | head -1" \
         "maven"
+
+    check_and_install \
+        "Node.js / npm" \
+        "node --version 2>/dev/null" \
+        "nodejs npm"
 
     header "Creating service user"
     if id "$SERVICE_USER" >/dev/null 2>&1; then
@@ -473,6 +478,7 @@ Group=${SERVICE_USER}
 WorkingDirectory=${DEPLOY_DIR}
 EnvironmentFile=${DEPLOY_DIR}/.env
 ExecStart=/usr/bin/java -jar ${DEPLOY_DIR}/app.jar --server.port=${backend_port}
+Environment=JAVA_HOME=/usr/lib/jvm/java-24-openjdk-amd64
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=10
@@ -593,6 +599,28 @@ do_deploy_backend() {
     else
         die "Neither mvnw nor mvn found. Run './deploy.sh setup' to install Maven."
     fi
+
+    # config.properties is in .gitignore — create empty file if missing
+    local config_props="${backend_dir}/src/main/resources/config.properties"
+    if [[ ! -f "$config_props" ]]; then
+        touch "$config_props"
+        info "Created empty config.properties (was missing from repo)"
+    fi
+
+    # Ensure the correct Java is used for the build — Maven picks up JAVA_HOME
+    # Prefer Java 23, fall back to 21, then whatever is default
+    local java_home_build
+    java_home_build="$(ls -d /usr/lib/jvm/java-24-openjdk-* 2>/dev/null | head -1 || true)"
+    if [[ -z "$java_home_build" ]]; then
+        java_home_build="$(ls -d /usr/lib/jvm/java-21-openjdk-* 2>/dev/null | head -1 || true)"
+    fi
+    if [[ -n "$java_home_build" ]]; then
+        export JAVA_HOME="$java_home_build"
+        info "Using JAVA_HOME: ${JAVA_HOME}"
+    else
+        warn "Java 24/21 not found in /usr/lib/jvm — build may fail if default Java is too old"
+    fi
+
     info "Running: ${mvn_cmd} clean package -DskipTests"
     (cd "$backend_dir" && $mvn_cmd clean package -DskipTests -q)
     ok "Build successful"
@@ -635,6 +663,8 @@ do_deploy_frontend() {
     header "Building frontend"
     [[ -f "${SCRIPT_DIR}/package.json" ]] || die "package.json not found in ${SCRIPT_DIR}"
 
+    info "Running: npm install"
+    (cd "$SCRIPT_DIR" && npm install)
     info "Running: npm run build"
     (cd "$SCRIPT_DIR" && npm run build)
     [[ -d "${SCRIPT_DIR}/dist" ]] || die "Build failed — dist/ directory not found"

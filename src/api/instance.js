@@ -2,14 +2,9 @@
 import axios from "axios";
 
 const getBaseURL = () => {
-  const hostname = window.location.hostname;
-  
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return "http://localhost:8080/api/";
-  } else {
-    // Use the same IP/hostname as the current page for the backend
-    return `http://${hostname}:8080/api/`;
-  }
+  // Always use a relative path so requests go through Nginx on whatever
+  // port the page was loaded from. Nginx proxies /api/ → backend.
+  return "/api/";
 };
 
 const baseURL = getBaseURL();
@@ -42,7 +37,7 @@ const userInstance = axios.create({
 
 const adminInstance = axios.create({
   baseURL: `${baseURL}admin/`,
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     Accept: "application/json",
   },

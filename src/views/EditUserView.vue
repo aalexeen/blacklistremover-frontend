@@ -1,83 +1,62 @@
 <script setup>
-//import router from '@/router';
-import { reactive, onMounted } from 'vue';
-import { useToast } from 'vue-toastification';
+import { reactive, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import { useToast } from 'vue-toastification';
+import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
+import api from '@/api/index';
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 
 const userId = route.params.id;
 
-const form = reactive({
-    first_name: '',
-    last_name: '',
-    nickname: '',
-    description: '',
-    subdivision: 'BHMC',
-    team: 'Support Group',
-    room: '',
-    contactEmail: '',
-    contactPhone: '',
-    registration: {
-        date: '',
-        last_login_date: ''
-    }
-});
-
 const state = reactive({
-    user: {},
     isLoading: true
 });
 
-const toast = useToast();
+const form = reactive({
+    id: null,
+    name: '',
+    email: '',
+    password: '',
+    role: 'USER',
+    enabled: true
+});
 
-const hanbleSubmit = async () => {
-    const updatedUser = {
-        first_name: form.first_name,
-        last_name: form.last_name,
-        nickname: form.nickname,
-        description: form.description,
-        subdivision: form.subdivision,
-        team: form.team,
-        room: form.room,
-        contactEmail: form.contactEmail,
-        contactPhone: form.contactPhone,
-        registration: {
-            date: form.registration.date,
-            last_login_date: form.registration.last_login_date
-        }
-    };
+const showPassword = ref(false);
 
+const handleSubmit = async () => {
     try {
-        const response = await axios.put(`/api/users/${userId}`, updatedUser);
-        toast.success('User Updated Successfully');
-        router.push(`/users/allusers/${response.data.id}`);
+        const payload = {
+            id: Number(userId),
+            name: form.name,
+            email: form.email,
+            roles: [form.role],
+            enabled: form.enabled
+        };
+        if (form.password) {
+            payload.password = form.password;
+        }
+        await api.adminUsers.update(userId, payload);
+        toast.success('User updated successfully');
+        router.push(`/users/allusers/${userId}`);
     } catch (error) {
-        console.error('Error updating user', error);
-        toast.error('User Was Not Updated');
+        const msg = error.response?.data?.detail || 'Failed to update user';
+        toast.error(msg);
     }
 };
 
 onMounted(async () => {
     try {
-        const response = await axios.get(`/api/users/${userId}`);
-        state.user = response.data;
-        // Populate inputs
-        form.first_name = state.user.first_name;
-        form.last_name = state.user.last_name;
-        form.nickname = state.user.nickname;
-        form.description = state.user.description;
-        form.subdivision = state.user.subdivision;
-        form.team = state.user.team;
-        form.room = state.user.room;
-        form.contactEmail = state.user.contactEmail;
-        form.contactPhone = state.user.contactPhone;
-        form.registration.date = state.user.registration.date;
-        form.registration.last_login_date = state.user.registration.last_login_date;
+        const response = await api.adminUsers.getById(userId);
+        const user = response.data;
+        form.name = user.name;
+        form.email = user.email;
+        form.role = user.roles?.includes('ADMIN') ? 'ADMIN' : 'USER';
+        form.enabled = user.enabled;
     } catch (error) {
-        console.error('Error fetching user', error);
+        toast.error('Failed to load user data');
     } finally {
         state.isLoading = false;
     }
@@ -85,171 +64,119 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="bg-green-50">
+    <div v-if="state.isLoading" class="text-center py-12">
+        <PulseLoader />
+    </div>
+
+    <section v-else class="bg-green-50 min-h-screen">
         <div class="container m-auto max-w-2xl py-24">
-            <div
-                class="bg-white px-6 py-8 mb-4 shadow-md rounded-md border m-4 md:m-0">
-                <!-- v-on -->
-                <form @submit.prevent="hanbleSubmit">
-                    <h2 class="text-3xl text-center font-semibold mb-6">Update User</h2>
+            <div class="bg-white px-6 py-8 mb-4 shadow-md rounded-md border m-4 md:m-0">
+                <form @submit.prevent="handleSubmit">
+                    <h2 class="text-3xl text-center font-semibold mb-6">Edit User</h2>
 
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-bold mb-2">First Name</label>
+                        <label class="block text-gray-700 font-bold mb-2">Name</label>
                         <input
                             type="text"
-                            v-model="form.first_name"
-                            id="first_name"
-                            name="first_name"
-                            class="border rounded w-full py-2 px-3 mb-2"
-                            placeholder="John"
-                            required />
+                            v-model="form.name"
+                            class="border rounded w-full py-2 px-3"
+                            placeholder="Full name"
+                            required
+                            minlength="2"
+                            maxlength="128"
+                        />
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-gray-700 font-bold mb-2">Last Name</label>
+                        <label class="block text-gray-700 font-bold mb-2">Email</label>
                         <input
-                            type="text"
-                            v-model="form.last_name"
-                            id="last_name"
-                            name="last_name"
-                            class="border rounded w-full py-2 px-3 mb-2"
-                            placeholder="Rembo"
-                            required />
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-bold mb-2">NickName</label>
-                        <input
-                            type="text"
-                            v-model="form.nickname"
-                            id="nickname"
-                            name="nickname"
-                            class="border rounded w-full py-2 px-3 mb-2"
-                            placeholder="nikcname"
-                            required />
-                    </div>
-
-                    <div class="mb-4">
-                        <label
-                            for="description"
-                            class="block text-gray-700 font-bold mb-2">Description</label>
-                        <textarea
-                            id="description"
-                            v-model="form.description"
-                            name="description"
+                            type="email"
+                            v-model="form.email"
                             class="border rounded w-full py-2 px-3"
-                            rows="4"
-                            placeholder="Add any user duties, expectations, requirements, etc"></textarea>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="type" class="block text-gray-700 font-bold mb-2">Subdivision</label>
-                        <select
-                            v-model="form.subdivision"
-                            id="subdivision"
-                            name="subdivision"
-                            class="border rounded w-full py-2 px-3"
-                            required>
-                            <option value="BHMC">BHMC</option>
-                            <option value="IMC">IMC</option>
-                            <option value="KJMC">KJMC</option>
-                            <option value="Others">Others</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="type" class="block text-gray-700 font-bold mb-2">Team</label>
-                        <select
-                            id="team"
-                            v-model="form.team"
-                            name="team"
-                            class="border rounded w-full py-2 px-3"
-                            required>
-                            <option value="Network Group">Network Group</option>
-                            <option value="Telecom Group">Telecom Group</option>
-                            <option value="Support Group">Support Group</option>
-                            <option value="Server Group">Server Group</option>
-                            <!-- <option value="$80K - $90K">$80 - $90K</option>
-                <option value="$90K - $100K">$90 - $100K</option>
-                <option value="$100K - $125K">$100 - $125K</option>
-                <option value="$125K - $150K">$125 - $150K</option>
-                <option value="$150K - $175K">$150 - $175K</option>
-                <option value="$175K - $200K">$175 - $200K</option>
-                <option value="Over $200K">Over $200K</option> -->
-                        </select>
+                            placeholder="user@example.com"
+                            required
+                            maxlength="128"
+                        />
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-gray-700 font-bold mb-2">
-                            Room
+                            New Password
+                            <span class="text-gray-400 font-normal text-sm ml-1">(leave empty to keep current)</span>
                         </label>
-                        <input
-                            type="text"
-                            v-model="form.room"
-                            id="room"
-                            name="room"
-                            class="border rounded w-full py-2 px-3 mb-2"
-                            placeholder="User's office location"
-                            required />
+                        <div class="relative">
+                            <input
+                                :type="showPassword ? 'text' : 'password'"
+                                v-model="form.password"
+                                class="border rounded w-full py-2 px-3 pr-10"
+                                placeholder="Min 5 characters"
+                                minlength="5"
+                                maxlength="32"
+                            />
+                            <button
+                                type="button"
+                                @click="showPassword = !showPassword"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="mb-4">
-                        <label
-                            for="contact_email"
-                            class="block text-gray-700 font-bold mb-2">Contact Email</label>
-                        <input
-                            type="email"
-                            v-model="form.contactEmail"
-                            id="contact_email"
-                            name="contact_email"
-                            class="border rounded w-full py-2 px-3"
-                            placeholder="Email address for user"
-                            required />
-                    </div>
-                    <div class="mb-4">
-                        <label
-                            for="contact_phone"
-                            class="block text-gray-700 font-bold mb-2">Contact Phone</label>
-                        <input
-                            type="tel"
-                            v-model="form.contactPhone"
-                            id="contact_phone"
-                            name="contact_phone"
-                            class="border rounded w-full py-2 px-3"
-                            placeholder="Optional phone for user" />
+                        <label class="block text-gray-700 font-bold mb-2">Role</label>
+                        <div class="flex gap-6">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="USER"
+                                    v-model="form.role"
+                                    class="w-4 h-4 accent-green-500"
+                                />
+                                <span class="bg-blue-100 text-blue-700 text-sm font-semibold px-2 py-0.5 rounded-full">USER</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    value="ADMIN"
+                                    v-model="form.role"
+                                    class="w-4 h-4 accent-green-500"
+                                />
+                                <span class="bg-purple-100 text-purple-700 text-sm font-semibold px-2 py-0.5 rounded-full">ADMIN</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <h3 class="text-2xl mb-5">Registration</h3>
-
-                    <div class="mb-4">
-                        <label for="date" class="block text-gray-700 font-bold mb-2">Registration Date</label>
-                        <input
-                            type="text"
-                            v-model="form.registration.date"
-                            id="date"
-                            name="date"
-                            class="border rounded w-full py-2 px-3"
-                            placeholder="registration date" />
+                    <div class="mb-6">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <span class="text-gray-700 font-bold">Account enabled</span>
+                            <button
+                                type="button"
+                                @click="form.enabled = !form.enabled"
+                                :class="[
+                                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none',
+                                    form.enabled ? 'bg-green-500' : 'bg-gray-300'
+                                ]">
+                                <span
+                                    :class="[
+                                        'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
+                                        form.enabled ? 'translate-x-6' : 'translate-x-1'
+                                    ]">
+                                </span>
+                            </button>
+                        </label>
                     </div>
 
-                    <div class="mb-4">
-                        <label
-                            for="last_login_date"
-                            class="block text-gray-700 font-bold mb-2">Last Login Date</label>
-                        <textarea
-                            id="last_login_date"
-                            v-model="form.registration.last_login_date"
-                            name="last_login_date"
-                            class="border rounded w-full py-2 px-3"
-                            rows="4"
-                            placeholder="What time has the user been login"></textarea>
-                    </div>
-
-                    <div>
+                    <div class="flex gap-3">
                         <button
-                            class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline"
-                            type="submit">
-                            Update User
+                            type="button"
+                            @click="$router.back()"
+                            class="flex-1 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded-full transition-colors">
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition-colors">
+                            Save Changes
                         </button>
                     </div>
                 </form>
