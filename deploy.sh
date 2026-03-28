@@ -477,8 +477,8 @@ User=${SERVICE_USER}
 Group=${SERVICE_USER}
 WorkingDirectory=${DEPLOY_DIR}
 EnvironmentFile=${DEPLOY_DIR}/.env
-ExecStart=/usr/bin/java -jar ${DEPLOY_DIR}/app.jar --server.port=${backend_port}
 Environment=JAVA_HOME=/usr/lib/jvm/java-24-openjdk-amd64
+ExecStart=/usr/lib/jvm/java-24-openjdk-amd64/bin/java -jar ${DEPLOY_DIR}/app.jar --server.port=${backend_port}
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=10
@@ -663,10 +663,31 @@ do_deploy_frontend() {
     header "Building frontend"
     [[ -f "${SCRIPT_DIR}/package.json" ]] || die "package.json not found in ${SCRIPT_DIR}"
 
+    # Use production vite config (no dev server / proxy section)
+    local vite_orig="${SCRIPT_DIR}/vite.config.js"
+    local vite_prod="${SCRIPT_DIR}/vite.config.prod.js"
+    local vite_backup="${SCRIPT_DIR}/vite.config.js.bak"
+    if [[ -f "$vite_prod" ]]; then
+        info "Swapping vite.config.js → vite.config.prod.js for build"
+        cp "$vite_orig" "$vite_backup"
+        cp "$vite_prod" "$vite_orig"
+        register_rollback "cp '${vite_backup}' '${vite_orig}'; rm -f '${vite_backup}'"
+    else
+        warn "vite.config.prod.js not found — building with default vite.config.js"
+    fi
+
     info "Running: npm install"
     (cd "$SCRIPT_DIR" && npm install)
     info "Running: npm run build"
     (cd "$SCRIPT_DIR" && npm run build)
+
+    # Restore original vite config
+    if [[ -f "$vite_backup" ]]; then
+        cp "$vite_backup" "$vite_orig"
+        rm -f "$vite_backup"
+        ok "vite.config.js restored"
+    fi
+
     [[ -d "${SCRIPT_DIR}/dist" ]] || die "Build failed — dist/ directory not found"
     ok "Build successful"
 

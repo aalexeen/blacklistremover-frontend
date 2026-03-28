@@ -268,7 +268,7 @@ onMounted(async () => {
                                     <span
                                         :class="[
                                             'inline-block text-xs font-medium px-2.5 py-1 rounded-full',
-                                            record.deletedByUserId === null
+                                            record.deletedByUserId === null || record.deletedByUserId === 0
                                                 ? 'bg-gray-100 text-gray-500'
                                                 : 'bg-blue-100 text-blue-700'
                                         ]">
