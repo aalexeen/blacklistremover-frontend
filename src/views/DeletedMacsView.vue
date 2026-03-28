@@ -137,7 +137,6 @@ onMounted(async () => {
                             v-model="filterUserId"
                             class="border border-gray-300 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white w-44">
                             <option :value="null">— Any user —</option>
-                            <option :value="0">System</option>
                             <option
                                 v-for="u in users"
                                 :key="u.id"
