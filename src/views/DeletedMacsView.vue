@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, watch, onMounted } from 'vue';
+import { reactive, ref, watch, onMounted, computed } from 'vue';
 import { useToast } from 'vue-toastification';
 import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
 import api from '@/api/index';
@@ -84,6 +84,14 @@ const resetFilters = () => {
     filterReason.value = '';
     filterDateFrom.value = '';
     filterDateTo.value = '';
+};
+
+const highlightMac = (text) => {
+    const query = filterMac.value ? filterMac.value.trim() : '';
+    if (!query) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    return text.replace(regex, '<mark class="bg-yellow-300 text-gray-900 rounded px-0.5">$1</mark>');
 };
 
 const hasActiveFilters = () =>
@@ -261,7 +269,7 @@ onMounted(async () => {
                                 v-for="record in state.records"
                                 :key="record.id"
                                 class="hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-3 font-mono text-sm text-gray-900">{{ record.clientMac }}</td>
+                                <td class="px-4 py-3 font-mono text-sm text-gray-900"><span v-html="highlightMac(record.clientMac)"></span></td>
                                 <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{{ formatDateTime(record.deletedTime) }}</td>
                                 <td class="px-4 py-3 text-sm">
                                     <span

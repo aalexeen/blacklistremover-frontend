@@ -5,6 +5,19 @@ import { useMacAddresses } from '@/composables/useMacAddresses';
 
 const props = defineProps({
     mac: Object,
+    searchQuery: {
+        type: String,
+        default: ''
+    }
+});
+
+const highlightMac = computed(() => {
+    const text = props.mac.clientMac;
+    const query = props.searchQuery ? props.searchQuery.trim() : '';
+    if (!query) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    return text.replace(regex, '<mark class="bg-yellow-300 text-gray-900 rounded px-0.5">$1</mark>');
 });
 
 const { deleteMacAddress } = useMacAddresses();
@@ -43,7 +56,7 @@ const handleDelete = async () => {
     <tr class="hover:bg-gray-50 border-b border-gray-200">
         <!-- MAC Address -->
         <td class="px-4 py-3 text-sm font-mono text-gray-900">
-            {{ mac.clientMac }}
+            <span v-html="highlightMac"></span>
         </td>
         
         <!-- Reason -->

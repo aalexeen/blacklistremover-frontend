@@ -102,7 +102,7 @@ onMounted(async () => {
 
             <!-- Show mac listing when done loading -->
             <div v-else-if="displayedMacs.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <MacAddressList v-for="mac in displayedMacs" :key="mac.id" :mac="mac" />
+                <MacAddressList v-for="mac in displayedMacs" :key="mac.id" :mac="mac" :search-query="searchQuery" />
             </div>
 
             <!-- Show message when no MACs are available -->

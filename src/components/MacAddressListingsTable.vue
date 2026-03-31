@@ -131,10 +131,11 @@ onMounted(async () => {
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <MacAddressListTable 
-                                v-for="mac in displayedMacs" 
-                                :key="mac.id" 
-                                :mac="mac" 
+                            <MacAddressListTable
+                                v-for="mac in displayedMacs"
+                                :key="mac.id"
+                                :mac="mac"
+                                :search-query="searchQuery"
                             />
                         </tbody>
                     </table>

@@ -4,6 +4,19 @@ import { RouterLink } from 'vue-router';
 
 const props = defineProps({
     mac: Object,
+    searchQuery: {
+        type: String,
+        default: ''
+    }
+});
+
+const highlightMac = computed(() => {
+    const text = props.mac.clientMac;
+    const query = props.searchQuery ? props.searchQuery.trim() : '';
+    if (!query) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    return text.replace(regex, '<mark class="bg-yellow-300 text-gray-900 rounded px-0.5">$1</mark>');
 });
 
 const showFullBlockTime = ref(false);
@@ -25,7 +38,7 @@ const truncatedBlockTime = computed(() => {
     <div class="bg-white rounded-xl shadow-md relative">
         <div class="p-4">
             <div class="mb-6">
-                <div class="text-gray-600 my-2">{{ mac.clientMac }}</div>
+                <div class="text-gray-600 my-2 font-mono"><span v-html="highlightMac"></span></div>
                 <h3 class="text-xl font-bold">{{ mac.reason }}</h3>
             </div>
 
